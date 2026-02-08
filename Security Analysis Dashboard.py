@@ -1028,6 +1028,9 @@ def main():
         - The dashboard remembers your analysis - change modes without re-analyzing!
         - Use NSE stocks with .NS suffix (e.g., RELIANCE.NS, TCS.NS)
         - Use BSE stocks with .BO suffix (e.g., RELIANCE.BO)
+
+        **⚠️DISCLAIMER:**
+        Developed as an educational project, the information in this dashboard may be delayed or outdated. Not suitable for financial decisions. Please approach a certified Financial Advisor before making financial decisions.
         """)
 
 
