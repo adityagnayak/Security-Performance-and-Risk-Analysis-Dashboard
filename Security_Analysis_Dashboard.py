@@ -734,7 +734,7 @@ def main():
         )
         
         # Add helpful hint below input
-        st.caption("💡 Tip: Use ticker symbols. For Indian stocks add .NS (NSE) or .BO (BSE)")
+        st.caption("💡 Tip: Use ticker symbols. For UK stocks add .L.")
         
         # Benchmark
         benchmark = st.selectbox(
@@ -883,15 +883,13 @@ def main():
                 - Example: Instead of "Apple Inc.", use **AAPL**
                 - Example: Instead of "Microsoft", use **MSFT**
                 
-                **For Indian Stocks**: Add .NS (NSE) or .BO (BSE)
+                **For Other Exchanges' Stocks**: Add .NS (NSE) or .L (LSEG) or .HK (SEHK)
                 - Example: Instead of "Tata Motors", use **TATAMOTORS.NS**
-                - Example: Instead of "Reliance", use **RELIANCE.NS** or **RELIANCE.BO**
+                - Example: Instead of "Rolls-Royces Holdings plc", use **RR.L**
                 
                 **Not sure of the ticker?** Search on:
                 - 🔍 [Yahoo Finance](https://finance.yahoo.com)
-                - 🔍 [NSE India](https://www.nseindia.com) (for Indian stocks)
-                - 🔍 [BSE India](https://www.bseindia.com) (for Indian stocks)
-                """)
+               """)
             
             else:
                 # Invalid ticker or other error
@@ -900,7 +898,6 @@ def main():
                 
                 **Please check:**
                 - Ticker symbol is correct (e.g., AAPL, MSFT, GOOGL)
-                - For Indian stocks, add .NS or .BO (e.g., RELIANCE.NS, TCS.BO)
                 - For international stocks, check the exchange suffix
                 
                 **Common formats:**
@@ -1240,7 +1237,7 @@ def main():
         - Switch to Advanced mode anytime for detailed metrics
         - The dashboard remembers your analysis - change modes without re-analyzing!
         - Use NSE stocks with .NS suffix (e.g., RELIANCE.NS, TCS.NS)
-        - Use BSE stocks with .BO suffix (e.g., RELIANCE.BO)
+        - Use LSEG stocks with .L suffix (e.g., AZN.L, RR.L)
         """)
 
 
