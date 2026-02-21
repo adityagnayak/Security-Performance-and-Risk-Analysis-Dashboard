@@ -1057,19 +1057,9 @@ def main():
         if st.session_state.analysis_mode == "Advanced":
             st.subheader("⚠️ Value at Risk (VaR) Analysis")
             
-            # Value at Risk (Advanced mode only)
-        if st.session_state.analysis_mode == "Advanced":
-            st.subheader("⚠️ Value at Risk (VaR) Analysis")
-            
             var_metrics = analyzer.calculate_var(var_confidence)
             cvar = analyzer.calculate_cvar(var_confidence)
             
-            # Calculate Skewness and Kurtosis for the distribution
-            returns_data = analyzer.data['Daily_Return'].dropna()
-            skewness = returns_data.skew()
-            kurtosis = returns_data.kurtosis()
-            
-            # Row 1: Core VaR Metrics
             col1, col2, col3 = st.columns(3)
             
             with col1:
@@ -1093,25 +1083,25 @@ def main():
                     help="Average loss in worst-case scenarios beyond VaR"
                 )
             
-            # Row 2: Distribution Shape Metrics (Tail Risk)
-            st.markdown("<br>", unsafe_allow_html=True) # Adds a small gap between rows
-            col4, col5 = st.columns(2)
-            
-            with col4:
-                st.metric(
-                    "Return Skewness", 
-                    f"{skewness:.3f}",
-                    help="Measures asymmetry. A negative value indicates a fat left tail (higher frequency of extreme losses)."
-                )
-                
-            with col5:
-                st.metric(
-                    "Return Kurtosis", 
-                    f"{kurtosis:.3f}",
-                    help="Measures 'tailedness'. A value > 3 indicates 'fat tails' and a higher probability of extreme events than a normal distribution."
-                )
-            
             st.markdown("---")
+        
+        # Charts - show cumulative returns for all, other charts only in advanced
+        if st.session_state.analysis_mode == "Basic":
+            st.plotly_chart(create_returns_chart(analyzer), use_container_width=True)
+        else:
+            # Advanced mode: show all charts
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.plotly_chart(create_returns_chart(analyzer), use_container_width=True)
+            
+            with col2:
+                st.plotly_chart(create_drawdown_chart(analyzer), use_container_width=True)
+            
+            # Distribution chart
+            st.plotly_chart(create_returns_distribution(analyzer), use_container_width=True)
+        
+        st.markdown("---")
         
         # Fundamental metrics
         st.subheader("💼 Fundamental Metrics")
