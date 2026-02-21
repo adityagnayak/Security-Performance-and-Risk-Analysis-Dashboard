@@ -1060,6 +1060,12 @@ def main():
             var_metrics = analyzer.calculate_var(var_confidence)
             cvar = analyzer.calculate_cvar(var_confidence)
             
+            # Calculate Skewness and Kurtosis for the distribution
+            returns_data = analyzer.data['Daily_Return'].dropna()
+            skewness = returns_data.skew()
+            kurtosis = returns_data.kurtosis()
+            
+            # Row 1: Core VaR Metrics
             col1, col2, col3 = st.columns(3)
             
             with col1:
@@ -1081,6 +1087,24 @@ def main():
                     f"CVaR / Expected Shortfall ({int(var_confidence*100)}%)",
                     format_number(cvar, is_percentage=True),
                     help="Average loss in worst-case scenarios beyond VaR"
+                )
+            
+            # Row 2: Distribution Shape Metrics (Tail Risk)
+            st.markdown("<br>", unsafe_allow_html=True) # Adds a small gap between rows
+            col4, col5 = st.columns(2)
+            
+            with col4:
+                st.metric(
+                    "Return Skewness", 
+                    f"{skewness:.3f}",
+                    help="Measures asymmetry. A negative value indicates a fat left tail (higher frequency of extreme losses)."
+                )
+                
+            with col5:
+                st.metric(
+                    "Return Kurtosis", 
+                    f"{kurtosis:.3f}",
+                    help="Measures 'tailedness'. A value > 3 indicates 'fat tails' and a higher probability of extreme events than a normal distribution."
                 )
             
             st.markdown("---")
