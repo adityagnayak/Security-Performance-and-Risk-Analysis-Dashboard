@@ -296,12 +296,27 @@ class SecurityAnalyzer:
         self.data['MA200'] = self.data['Close'].rolling(window=200).mean()
     
     def calculate_returns(self):
-        """Calculate daily and cumulative returns"""
-        self.data['Daily_Return'] = self.data['Close'].pct_change()
-        self.data['Cumulative_Return'] = (1 + self.data['Daily_Return']).cumprod() - 1
+        """
+        Calculate Logarithmic and Cumulative returns.
+        Using Log Returns (Continuous Compounding) for accurate long-term risk modeling.
+        """
+        # --- Stock Data ---
+        # 1. Calculate Log Returns: ln(Pt / Pt-1)
+        # This handles extreme volatility better than simple % change
+        self.data['Log_Return'] = np.log(self.data['Close'] / self.data['Close'].shift(1))
         
-        self.benchmark_data['Daily_Return'] = self.benchmark_data['Close'].pct_change()
-        self.benchmark_data['Cumulative_Return'] = (1 + self.benchmark_data['Daily_Return']).cumprod() - 1
+        # 2. Map Log Returns to 'Daily_Return' 
+        # This ensures your Volatility, VaR, and Beta functions automatically use the more robust metric
+        self.data['Daily_Return'] = self.data['Log_Return']
+        
+        # 3. Calculate Cumulative Return via Exponential Sum
+        # This prevents "floating point arithmetic errors" over 50 years of compounding
+        self.data['Cumulative_Return'] = np.exp(self.data['Log_Return'].cumsum()) - 1
+        
+        # --- Benchmark Data ---
+        self.benchmark_data['Log_Return'] = np.log(self.benchmark_data['Close'] / self.benchmark_data['Close'].shift(1))
+        self.benchmark_data['Daily_Return'] = self.benchmark_data['Log_Return']
+        self.benchmark_data['Cumulative_Return'] = np.exp(self.benchmark_data['Log_Return'].cumsum()) - 1
     
     def get_52week_metrics(self):
         """Get 52-week high and low"""
@@ -1209,7 +1224,7 @@ def main():
                 ],
                 'Value': [
                     format_number(analyzer.data['Cumulative_Return'].iloc[-1], is_percentage=True),
-                    format_number(returns_data.mean() * 252, is_percentage=True),
+                    format_number(np.exp(returns_data.mean() * 252) - 1, is_percentage=True),
                     format_number(volatility, is_percentage=True),
                     f"{sharpe:.3f}",
                     f"{sortino:.3f}",
