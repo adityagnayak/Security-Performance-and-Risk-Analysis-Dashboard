@@ -133,7 +133,7 @@ st.markdown("""
     .disclaimer {
         position: fixed;
         bottom: 0;
-        left: 0;
+        left: 21rem;
         right: 0;
         background-color: #ff0000;
         color: #ffffff;
