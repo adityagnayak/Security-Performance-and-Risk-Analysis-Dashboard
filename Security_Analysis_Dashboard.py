@@ -129,7 +129,7 @@ st.markdown("""
     footer {visibility: hidden;}
     .stDeployButton {display:none;}
     
-    /* Disclaimer styling */
+    /* Disclaimer styling - respects main content area */
     .disclaimer {
         position: fixed;
         bottom: 0;
@@ -167,6 +167,63 @@ class SecurityAnalyzer:
         self.data = None
         self.benchmark_data = None
         self.info = None
+        self.suggested_benchmark = None
+        self.benchmark_warning = None
+    
+    def get_appropriate_benchmark(self):
+        """
+        Automatically suggest the appropriate benchmark based on ticker exchange.
+        Returns (suggested_benchmark, warning_message)
+        """
+        ticker = self.ticker.upper()
+        
+        # Exchange-specific benchmark mappings
+        exchange_benchmarks = {
+            '.NS': ('^NSEI', 'NSE India - suggested benchmark: Nifty 50 (^NSEI)'),
+            '.BO': ('^BSESN', 'BSE India - suggested benchmark: BSE Sensex (^BSESN)'),
+            '.L': ('^FTSE', 'London Stock Exchange - suggested benchmark: FTSE 100 (^FTSE)'),
+            '.T': ('^N225', 'Tokyo Stock Exchange - suggested benchmark: Nikkei 225 (^N225)'),
+            '.HK': ('^HSI', 'Hong Kong Stock Exchange - suggested benchmark: Hang Seng (^HSI)'),
+            '.AX': ('^AXJO', 'Australian Stock Exchange - suggested benchmark: ASX 200 (^AXJO)'),
+            '.TO': ('^GSPTSE', 'Toronto Stock Exchange - suggested benchmark: S&P/TSX (^GSPTSE)'),
+            '.PA': ('^FCHI', 'Paris Stock Exchange - suggested benchmark: CAC 40 (^FCHI)'),
+            '.DE': ('^GDAXI', 'Frankfurt Stock Exchange - suggested benchmark: DAX (^GDAXI)'),
+            '.SW': ('^SSMI', 'Swiss Exchange - suggested benchmark: SMI (^SSMI)'),
+        }
+        
+        # Check if ticker has an exchange suffix
+        for suffix, (benchmark, message) in exchange_benchmarks.items():
+            if ticker.endswith(suffix):
+                return benchmark, message
+        
+        # Default to SPY for US stocks (no suffix or common US patterns)
+        if ticker.startswith('^'):
+            # It's an index itself
+            return 'SPY', 'Index ticker - using S&P 500 (SPY) as benchmark'
+        
+        # Check if it's likely a US stock (no suffix, 1-5 letters)
+        if '.' not in ticker and len(ticker) <= 5:
+            return 'SPY', 'US Stock - using S&P 500 (SPY) as benchmark'
+        
+        # Unknown exchange
+        return None, 'Unknown exchange - please select appropriate benchmark manually'
+    
+    def check_benchmark_compatibility(self):
+        """
+        Check if the selected benchmark is appropriate for the ticker.
+        Returns (is_compatible, warning_message)
+        """
+        ticker = self.ticker.upper()
+        benchmark = self.benchmark.upper()
+        
+        # Get suggested benchmark
+        suggested, message = self.get_appropriate_benchmark()
+        
+        # If user's benchmark doesn't match suggested, create warning
+        if suggested and benchmark != suggested:
+            return False, f"⚠️ Potential benchmark mismatch: {message}. You selected {benchmark}."
+        
+        return True, None
         
     def search_ticker(self, query):
         """
@@ -272,9 +329,23 @@ class SecurityAnalyzer:
             suffixes=('_stock', '_benchmark')
         ).dropna()
         
+        # Check if there's sufficient overlapping data
+        if len(merged) < 30:
+            self.benchmark_warning = f"⚠️ WARNING: Only {len(merged)} overlapping trading days between {self.ticker} and {self.benchmark}. Beta calculation may be unreliable. Consider using a benchmark from the same market."
+        
+        # Check if there's NO overlapping data
+        if len(merged) == 0:
+            self.benchmark_warning = f"🚨 ERROR: No overlapping trading days between {self.ticker} and {self.benchmark}. These securities likely trade on different exchanges/timezones. Please select an appropriate benchmark for this market."
+            return np.nan
+        
         covariance = merged['Daily_Return_stock'].cov(merged['Daily_Return_benchmark'])
         benchmark_variance = merged['Daily_Return_benchmark'].var()
-        beta = covariance / benchmark_variance if benchmark_variance != 0 else 0
+        beta = covariance / benchmark_variance if benchmark_variance != 0 else np.nan
+        
+        # Check if beta is NaN
+        if np.isnan(beta):
+            if self.benchmark_warning is None:
+                self.benchmark_warning = f"⚠️ Beta calculation resulted in NaN. This typically means {self.ticker} and {self.benchmark} don't have overlapping data or trade on different exchanges."
         
         return beta
     
@@ -668,8 +739,8 @@ def main():
         # Benchmark
         benchmark = st.selectbox(
             "Benchmark Index",
-            ["SPY", "QQQ", "DIA", "IWM", "^GSPC", "^DJI", "^IXIC", "^NSEI", "^BSESN", "^FTSE", "^N225", "^HSI"],
-            help="Select benchmark for comparative analysis (US: SPY/QQQ/DIA | India: ^NSEI/^BSESN | Global: ^FTSE/^N225/^HSI)",
+            ["SPY", "QQQ", "DIA", "IWM", "^GSPC", "^DJI", "^IXIC", "^NSEI", "^BSESN", "^FTSE", "^N225", "^HSI", "^AXJO", "^GSPTSE", "^FCHI", "^GDAXI", "^SSMI"],
+            help="Select benchmark for comparative analysis\nUS: SPY/QQQ/DIA | India: ^NSEI/^BSESN | UK: ^FTSE | Japan: ^N225 | HK: ^HSI | AU: ^AXJO | CA: ^GSPTSE | FR: ^FCHI | DE: ^GDAXI | CH: ^SSMI",
             key="benchmark"
         )
         
@@ -757,6 +828,27 @@ def main():
             if resolved_ticker:
                 # Successfully found ticker
                 st.info(f"Found: {name_or_status} ({resolved_ticker})")
+                
+                # Check if benchmark is appropriate for this ticker
+                temp_analyzer_check = SecurityAnalyzer(resolved_ticker, benchmark)
+                suggested_benchmark, suggestion_msg = temp_analyzer_check.get_appropriate_benchmark()
+                is_compatible, warning_msg = temp_analyzer_check.check_benchmark_compatibility()
+                
+                # Show benchmark suggestion if needed
+                if not is_compatible and suggested_benchmark:
+                    st.warning(f"""
+                    {warning_msg}
+                    
+                    **Recommended Action**: Consider changing benchmark to **{suggested_benchmark}** for more accurate correlation and beta calculations.
+                    
+                    💡 **Why?** Securities from different markets/exchanges often don't have overlapping trading days, which results in unreliable metrics (NaN values for Beta, correlation, etc.)
+                    """)
+                    
+                    # Offer to auto-switch
+                    if st.button(f"✨ Auto-Switch to {suggested_benchmark}", key="auto_switch_benchmark"):
+                        benchmark = suggested_benchmark
+                        st.success(f"✅ Benchmark changed to {suggested_benchmark}")
+                        st.rerun()
                 
                 with st.spinner("Fetching and analyzing data..."):
                     # Initialize analyzer with resolved ticker
@@ -887,6 +979,20 @@ def main():
         st.subheader("📈 Risk & Performance Metrics")
         
         beta = analyzer.calculate_beta()
+        
+        # Display benchmark warning if there are issues
+        if analyzer.benchmark_warning:
+            st.error(analyzer.benchmark_warning)
+            
+            # Suggest appropriate benchmark
+            suggested_benchmark, suggestion_msg = analyzer.get_appropriate_benchmark()
+            if suggested_benchmark and suggested_benchmark != analyzer.benchmark:
+                st.info(f"""
+                💡 **Suggestion**: {suggestion_msg}
+                
+                Go back and change your benchmark to **{suggested_benchmark}** for accurate metrics, or use the sidebar to re-analyze with the correct benchmark.
+                """)
+        
         alpha = analyzer.calculate_alpha(risk_free_rate)
         sharpe = analyzer.calculate_sharpe_ratio(risk_free_rate)
         sortino = analyzer.calculate_sortino_ratio(risk_free_rate)
@@ -900,7 +1006,8 @@ def main():
             col1, col2, col3, col4 = st.columns(4)
             
             with col1:
-                st.metric("Beta", f"{beta:.3f}", 
+                beta_display = f"{beta:.3f}" if not np.isnan(beta) else "N/A"
+                st.metric("Beta", beta_display, 
                         help="Volatility vs market. <1 = less volatile, >1 = more volatile")
             
             with col2:
@@ -923,23 +1030,28 @@ def main():
             col1, col2, col3, col4, col5 = st.columns(5)
             
             with col1:
-                st.metric("Beta", f"{beta:.3f}")
+                beta_display = f"{beta:.3f}" if not np.isnan(beta) else "N/A"
+                st.metric("Beta", beta_display)
                 st.metric("Sharpe Ratio", f"{sharpe:.3f}")
             
             with col2:
-                st.metric("Alpha", format_number(alpha, is_percentage=True))
+                alpha_display = format_number(alpha, is_percentage=True) if not np.isnan(alpha) else "N/A"
+                st.metric("Alpha", alpha_display)
                 st.metric("Sortino Ratio", f"{sortino:.3f}")
             
             with col3:
                 st.metric("Volatility", format_number(volatility, is_percentage=True))
-                st.metric("Information Ratio", f"{info_ratio:.3f}")
+                info_display = f"{info_ratio:.3f}" if not np.isnan(info_ratio) else "N/A"
+                st.metric("Information Ratio", info_display)
             
             with col4:
                 st.metric("Max Drawdown", format_number(max_dd, is_percentage=True))
-                st.metric("Calmar Ratio", f"{calmar:.3f}")
+                calmar_display = f"{calmar:.3f}" if not np.isnan(calmar) else "N/A"
+                st.metric("Calmar Ratio", calmar_display)
             
             with col5:
-                st.metric("Correlation w/ Benchmark", f"{correlation:.3f}")
+                corr_display = f"{correlation:.3f}" if not np.isnan(correlation) else "N/A"
+                st.metric("Correlation w/ Benchmark", corr_display)
                 st.metric("Annualized Return", format_number(annual_return, is_percentage=True))
         
         st.markdown("---")
