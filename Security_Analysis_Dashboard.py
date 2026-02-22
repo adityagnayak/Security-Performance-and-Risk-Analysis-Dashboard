@@ -22,118 +22,248 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Apply custom CSS (embedded for compatibility)
+# Apply custom CSS (responsive and adaptive to browser theme)
 st.markdown("""
     <style>
+    /* ===== FONT FAMILY ===== */
     * {
         font-family: 'Times New Roman', Times, serif !important;
     }
-    .main {
-        padding: 0rem 1rem;
+    
+    /* ===== LIGHT/DARK MODE ADAPTIVE COLORS ===== */
+    /* Light mode (browser default) */
+    :root {
+        --bg-primary: #ffffff;
+        --bg-secondary: #f8f9fa;
+        --bg-metric: #e8eef3;
+        --bg-sidebar: #f0f2f6;
+        --text-primary: #1f1f1f;
+        --text-secondary: #4a4a4a;
+        --border-color: #d0d0d0;
+        --accent-blue: #1f77b4;
     }
-    /* Ensure sidebar is visible */
+    
+    /* Dark mode (browser prefers dark) */
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --bg-primary: #0e1117;
+            --bg-secondary: #1e1e1e;
+            --bg-metric: #2c3e50;
+            --bg-sidebar: #1e1e1e;
+            --text-primary: #ffffff;
+            --text-secondary: #e0e0e0;
+            --border-color: #4a4a4a;
+            --accent-blue: #1f77b4;
+        }
+    }
+    
+    /* ===== MOBILE RESPONSIVENESS ===== */
+    /* Base mobile styles */
+    @media only screen and (max-width: 768px) {
+        .main {
+            padding: 0.5rem !important;
+        }
+        
+        /* Stack columns on mobile */
+        .row-widget.stHorizontal {
+            flex-direction: column !important;
+        }
+        
+        /* Full width metrics on mobile */
+        [data-testid="column"] {
+            width: 100% !important;
+            flex: 100% !important;
+        }
+        
+        /* Adjust disclaimer for mobile */
+        .disclaimer {
+            position: relative !important;
+            left: 0 !important;
+            font-size: 12px !important;
+            padding: 10px !important;
+            margin-top: 2rem !important;
+        }
+        
+        /* Sidebar adjustments for mobile */
+        [data-testid="stSidebar"] {
+            width: 100% !important;
+        }
+        
+        /* Smaller fonts on mobile */
+        h1 {
+            font-size: 1.5rem !important;
+        }
+        
+        h2 {
+            font-size: 1.2rem !important;
+        }
+        
+        h3 {
+            font-size: 1rem !important;
+        }
+        
+        /* Chart height adjustments */
+        .js-plotly-plot {
+            height: 300px !important;
+        }
+    }
+    
+    /* Tablet styles */
+    @media only screen and (min-width: 769px) and (max-width: 1024px) {
+        .main {
+            padding: 0.75rem !important;
+        }
+        
+        .disclaimer {
+            left: 16rem !important;
+        }
+    }
+    
+    /* Desktop styles */
+    @media only screen and (min-width: 1025px) {
+        .main {
+            padding: 0rem 1rem;
+        }
+        
+        .disclaimer {
+            left: 21rem !important;
+        }
+    }
+    
+    /* ===== CORE LAYOUT ===== */
+    .main {
+        background-color: var(--bg-primary);
+    }
+    
+    /* ===== SIDEBAR ===== */
     [data-testid="stSidebar"] {
         display: block !important;
         visibility: visible !important;
     }
+    
     [data-testid="stSidebar"] > div {
-        background-color: #1e1e1e;
+        background-color: var(--bg-sidebar);
     }
-    /* Sidebar text colors */
+    
     [data-testid="stSidebar"] label, 
     [data-testid="stSidebar"] p, 
     [data-testid="stSidebar"] span,
-    [data-testid="stSidebar"] div {
-        color: #ffffff !important;
+    [data-testid="stSidebar"] div,
+    [data-testid="stSidebar"] h1,
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3 {
+        color: var(--text-primary) !important;
     }
+    
+    /* ===== METRICS CARDS ===== */
     .stMetric {
-        background-color: #2c3e50 !important;
+        background-color: var(--bg-metric) !important;
         padding: 15px;
         border-radius: 5px;
-        border-left: 3px solid #1f77b4;
+        border-left: 3px solid var(--accent-blue);
+        margin-bottom: 10px;
     }
-    .stMetric label, .stMetric div {
-        color: #ffffff !important;
+    
+    .stMetric label, 
+    .stMetric div,
+    [data-testid="stMetricValue"],
+    [data-testid="stMetricLabel"] {
+        color: var(--text-primary) !important;
         font-family: 'Times New Roman', Times, serif !important;
     }
-    .metric-card {
-        background-color: #2c3e50;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        margin: 10px 0;
-    }
+    
+    /* ===== TYPOGRAPHY ===== */
     h1 {
-        color: #ffffff;
+        color: var(--text-primary);
         font-weight: 600;
         padding-bottom: 1rem;
-        border-bottom: 2px solid #e0e0e0;
+        border-bottom: 2px solid var(--border-color);
         font-family: 'Times New Roman', Times, serif !important;
     }
+    
     h2, h3 {
-        color: #ffffff;
+        color: var(--text-primary);
         font-weight: 500;
         font-family: 'Times New Roman', Times, serif !important;
     }
-    .stAlert {
-        background-color: #2c3e50 !important;
-        border-left: 4px solid #1f77b4;
-        color: #ffffff !important;
+    
+    p, label, span, div {
+        color: var(--text-primary) !important;
+        font-family: 'Times New Roman', Times, serif !important;
     }
-    /* Success messages */
-    .stSuccess {
-        background-color: #2c3e50 !important;
-        color: #ffffff !important;
-        border-left: 4px solid #28a745 !important;
+    
+    /* ===== ALERT MESSAGES ===== */
+    .stAlert,
+    [data-testid="stAlert"] {
+        background-color: var(--bg-metric) !important;
+        border-left: 4px solid var(--accent-blue);
+        color: var(--text-primary) !important;
     }
-    /* Info messages */
+    
+    .stSuccess,
+    [data-testid="stAlert"][data-baseweb="notification"] {
+        background-color: var(--bg-metric) !important;
+        color: var(--text-primary) !important;
+    }
+    
     .stInfo {
-        background-color: #2c3e50 !important;
-        color: #ffffff !important;
+        background-color: var(--bg-metric) !important;
+        color: var(--text-primary) !important;
         border-left: 4px solid #17a2b8 !important;
     }
-    /* Warning messages */
+    
     .stWarning {
-        background-color: #2c3e50 !important;
-        color: #ffffff !important;
+        background-color: var(--bg-metric) !important;
+        color: var(--text-primary) !important;
         border-left: 4px solid #ffc107 !important;
     }
-    /* Error messages */
+    
     .stError {
-        background-color: #2c3e50 !important;
-        color: #ffffff !important;
+        background-color: var(--bg-metric) !important;
+        color: var(--text-primary) !important;
         border-left: 4px solid #dc3545 !important;
     }
-    /* Target alert divs */
-    [data-testid="stAlert"] {
-        background-color: #2c3e50 !important;
-        color: #ffffff !important;
+    
+    [data-testid="stAlert"] p, 
+    [data-testid="stAlert"] div {
+        color: var(--text-primary) !important;
     }
-    [data-testid="stAlert"] p, [data-testid="stAlert"] div {
-        color: #ffffff !important;
+    
+    /* ===== INPUTS ===== */
+    input, select, textarea {
+        background-color: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border-color) !important;
     }
-    p, label, span, div {
-        color: #ffffff !important;
-        font-family: 'Times New Roman', Times, serif !important;
+    
+    /* ===== BUTTONS ===== */
+    .stButton > button {
+        background-color: var(--bg-metric);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
     }
-    [data-testid="stMetricValue"] {
-        color: #ffffff !important;
-        font-family: 'Times New Roman', Times, serif !important;
+    
+    .stButton > button:hover {
+        background-color: var(--accent-blue);
+        color: #ffffff;
+        border-color: var(--accent-blue);
     }
-    [data-testid="stMetricLabel"] {
-        color: #ffffff !important;
-        font-family: 'Times New Roman', Times, serif !important;
+    
+    /* ===== DATAFRAMES ===== */
+    .dataframe {
+        color: var(--text-primary) !important;
+        background-color: var(--bg-secondary) !important;
     }
-    /* Hide Streamlit branding but keep sidebar */
+    
+    /* ===== HIDE STREAMLIT BRANDING ===== */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    .stDeployButton {display:none;}
+    .stDeployButton {display: none;}
     
-    /* Disclaimer styling - respects main content area */
+    /* ===== DISCLAIMER ===== */
     .disclaimer {
         position: fixed;
         bottom: 0;
-        left: 21rem;
         right: 0;
         background-color: #ff0000;
         color: #ffffff;
@@ -144,6 +274,60 @@ st.markdown("""
         z-index: 999;
         border-top: 3px solid #ffffff;
         font-family: 'Times New Roman', Times, serif !important;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
+    }
+    
+    /* Ensure disclaimer text is always white */
+    .disclaimer, .disclaimer * {
+        color: #ffffff !important;
+    }
+    
+    /* ===== MOBILE SPECIFIC OPTIMIZATIONS ===== */
+    @media only screen and (max-width: 768px) {
+        /* Touch-friendly buttons */
+        .stButton > button {
+            min-height: 44px;
+            font-size: 16px;
+            padding: 12px 24px;
+        }
+        
+        /* Larger input fields for mobile */
+        input, select {
+            font-size: 16px !important;
+            min-height: 44px;
+        }
+        
+        /* Prevent zoom on input focus (iOS) */
+        input:focus, select:focus, textarea:focus {
+            font-size: 16px !important;
+        }
+        
+        /* Scrollable tables on mobile */
+        .dataframe-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+    }
+    
+    /* ===== ACCESSIBILITY ===== */
+    /* High contrast for better readability */
+    @media (prefers-contrast: high) {
+        :root {
+            --border-color: #000000;
+        }
+        
+        .stMetric {
+            border-left-width: 5px;
+        }
+    }
+    
+    /* Reduced motion for users who prefer it */
+    @media (prefers-reduced-motion: reduce) {
+        * {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -296,27 +480,12 @@ class SecurityAnalyzer:
         self.data['MA200'] = self.data['Close'].rolling(window=200).mean()
     
     def calculate_returns(self):
-        """
-        Calculate Logarithmic and Cumulative returns.
-        Using Log Returns (Continuous Compounding) for accurate long-term risk modeling.
-        """
-        # --- Stock Data ---
-        # 1. Calculate Log Returns: ln(Pt / Pt-1)
-        # This handles extreme volatility better than simple % change
-        self.data['Log_Return'] = np.log(self.data['Close'] / self.data['Close'].shift(1))
+        """Calculate daily and cumulative returns"""
+        self.data['Daily_Return'] = self.data['Close'].pct_change()
+        self.data['Cumulative_Return'] = (1 + self.data['Daily_Return']).cumprod() - 1
         
-        # 2. Map Log Returns to 'Daily_Return' 
-        # This ensures your Volatility, VaR, and Beta functions automatically use the more robust metric
-        self.data['Daily_Return'] = self.data['Log_Return']
-        
-        # 3. Calculate Cumulative Return via Exponential Sum
-        # This prevents "floating point arithmetic errors" over 50 years of compounding
-        self.data['Cumulative_Return'] = np.exp(self.data['Log_Return'].cumsum()) - 1
-        
-        # --- Benchmark Data ---
-        self.benchmark_data['Log_Return'] = np.log(self.benchmark_data['Close'] / self.benchmark_data['Close'].shift(1))
-        self.benchmark_data['Daily_Return'] = self.benchmark_data['Log_Return']
-        self.benchmark_data['Cumulative_Return'] = np.exp(self.benchmark_data['Log_Return'].cumsum()) - 1
+        self.benchmark_data['Daily_Return'] = self.benchmark_data['Close'].pct_change()
+        self.benchmark_data['Cumulative_Return'] = (1 + self.benchmark_data['Daily_Return']).cumprod() - 1
     
     def get_52week_metrics(self):
         """Get 52-week high and low"""
@@ -749,7 +918,7 @@ def main():
         )
         
         # Add helpful hint below input
-        st.caption("💡 Tip: Use ticker symbols. For UK stocks add .L.")
+        st.caption("💡 Tip: Use ticker symbols. For Indian stocks add .NS (NSE) or .BO (BSE)")
         
         # Benchmark
         benchmark = st.selectbox(
@@ -898,13 +1067,15 @@ def main():
                 - Example: Instead of "Apple Inc.", use **AAPL**
                 - Example: Instead of "Microsoft", use **MSFT**
                 
-                **For Other Exchanges' Stocks**: Add .NS (NSE) or .L (LSEG) or .HK (SEHK)
+                **For Indian Stocks**: Add .NS (NSE) or .BO (BSE)
                 - Example: Instead of "Tata Motors", use **TATAMOTORS.NS**
-                - Example: Instead of "Rolls-Royces Holdings plc", use **RR.L**
+                - Example: Instead of "Reliance", use **RELIANCE.NS** or **RELIANCE.BO**
                 
                 **Not sure of the ticker?** Search on:
                 - 🔍 [Yahoo Finance](https://finance.yahoo.com)
-               """)
+                - 🔍 [NSE India](https://www.nseindia.com) (for Indian stocks)
+                - 🔍 [BSE India](https://www.bseindia.com) (for Indian stocks)
+                """)
             
             else:
                 # Invalid ticker or other error
@@ -913,6 +1084,7 @@ def main():
                 
                 **Please check:**
                 - Ticker symbol is correct (e.g., AAPL, MSFT, GOOGL)
+                - For Indian stocks, add .NS or .BO (e.g., RELIANCE.NS, TCS.BO)
                 - For international stocks, check the exchange suffix
                 
                 **Common formats:**
@@ -1075,12 +1247,6 @@ def main():
             var_metrics = analyzer.calculate_var(var_confidence)
             cvar = analyzer.calculate_cvar(var_confidence)
             
-            # Calculate Skewness and Kurtosis for the distribution
-            returns_data = analyzer.data['Daily_Return'].dropna()
-            skewness = returns_data.skew()
-            kurtosis = returns_data.kurtosis()
-            
-            # Row 1: Core VaR Metrics
             col1, col2, col3 = st.columns(3)
             
             with col1:
@@ -1102,24 +1268,6 @@ def main():
                     f"CVaR / Expected Shortfall ({int(var_confidence*100)}%)",
                     format_number(cvar, is_percentage=True),
                     help="Average loss in worst-case scenarios beyond VaR"
-                )
-            
-            # Row 2: Distribution Shape Metrics (Tail Risk)
-            st.markdown("<br>", unsafe_allow_html=True) # Adds a small gap between rows
-            col4, col5 = st.columns(2)
-            
-            with col4:
-                st.metric(
-                    "Return Skewness", 
-                    f"{skewness:.3f}",
-                    help="Measures asymmetry. A negative value indicates a fat left tail (higher frequency of extreme losses)."
-                )
-                
-            with col5:
-                st.metric(
-                    "Return Kurtosis", 
-                    f"{kurtosis:.3f}",
-                    help="Measures 'tailedness'. A value > 3 indicates 'fat tails' and a higher probability of extreme events than a normal distribution."
                 )
             
             st.markdown("---")
@@ -1224,7 +1372,7 @@ def main():
                 ],
                 'Value': [
                     format_number(analyzer.data['Cumulative_Return'].iloc[-1], is_percentage=True),
-                    format_number(np.exp(returns_data.mean() * 252) - 1, is_percentage=True),
+                    format_number(returns_data.mean() * 252, is_percentage=True),
                     format_number(volatility, is_percentage=True),
                     f"{sharpe:.3f}",
                     f"{sortino:.3f}",
@@ -1276,7 +1424,7 @@ def main():
         - Switch to Advanced mode anytime for detailed metrics
         - The dashboard remembers your analysis - change modes without re-analyzing!
         - Use NSE stocks with .NS suffix (e.g., RELIANCE.NS, TCS.NS)
-        - Use LSEG stocks with .L suffix (e.g., AZN.L, RR.L)
+        - Use BSE stocks with .BO suffix (e.g., RELIANCE.BO)
         """)
 
 
