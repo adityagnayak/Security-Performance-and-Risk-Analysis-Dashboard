@@ -69,7 +69,7 @@ st.markdown("""
   }
 
   /* Hide Streamlit branding */
-  #MainMenu, footer, header, .stDeployButton { display: none !important; }
+  #MainMenu, footer, .stDeployButton { display: none !important; }
   .block-container { padding-top: 1.5rem !important; padding-bottom: 5rem !important; }
 
   /* Main header */
