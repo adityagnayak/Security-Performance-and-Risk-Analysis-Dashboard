@@ -250,9 +250,16 @@ st.markdown("""
   /* Disclaimer */
   .disclaimer {
     position: fixed;
-    bottom: 0;
-    left: 6rem;
-    right: 6rem;
+    bottom: 1rem; /* Lifted slightly off the very bottom edge */
+    
+    /* Center the element */
+    left: 50%;
+    transform: translateX(-50%);
+    
+    /* Ensure it doesn't touch the edges on mobile */
+    width: auto;
+    max-width: 90%; 
+    
     background: #cc0000;
     color: #ffffff;
     font-weight: 700;
@@ -262,7 +269,11 @@ st.markdown("""
     z-index: 9999;
     letter-spacing: 0.02em;
     font-family: Helvetica, Arial, sans-serif;
-  }
+    
+    /* Rounds corners for a "floating card" look */
+    border-radius: 8px; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Adds a subtle shadow */
+}
 
   /* Mobile responsive */
   @media (max-width: 768px) {
