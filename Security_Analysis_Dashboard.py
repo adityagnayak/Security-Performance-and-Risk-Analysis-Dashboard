@@ -1121,16 +1121,7 @@ def main():
                     💡 **Why?** Securities from different markets/exchanges often don't have overlapping trading days, which results in unreliable metrics (NaN values for Beta, correlation, etc.)
                     """)
                     
-                    # Offer to auto-switch
-                    if st.button(f"✨ Switch to {suggested_benchmark} & Re-analyze", key="auto_switch_benchmark", type="primary"):
-                        # Update the benchmark value in session state widget
-                        st.query_params['suggested_bench'] = suggested_benchmark
-                        # Force the analyze to happen with new benchmark on rerun
-                        st.session_state['force_benchmark'] = suggested_benchmark
-                        st.session_state['force_ticker'] = resolved_ticker
-                        st.session_state['force_analyze'] = True
-                        st.rerun()
-                
+                                
                 # Check if we need to force analysis with new benchmark
                 if 'force_analyze' in st.session_state and st.session_state.force_analyze:
                     # Override benchmark with forced value
