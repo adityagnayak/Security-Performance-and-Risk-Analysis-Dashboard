@@ -251,8 +251,8 @@ st.markdown("""
   .disclaimer {
     position: fixed;
     bottom: 0;
-    left: 2.5rem;
-    right: 2.5rem;
+    left: 6rem;
+    right: 6rem;
     background: #cc0000;
     color: #ffffff;
     font-weight: 700;
