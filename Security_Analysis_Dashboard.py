@@ -412,74 +412,94 @@ class SecurityAnalyzer:
     def search_ticker(self, query):
         """
         Search for ticker symbol from company name or ticker.
-        Tries multiple strategies to find the correct ticker.
+        Simplified to avoid rate limiting - minimal validation.
         """
         try:
-            query = query.strip()
+            query = query.strip().upper()
             
-            # Strategy 1: Direct ticker lookup (if already a ticker)
-            ticker_obj = yf.Ticker(query.upper())
-            info = ticker_obj.info
+            # If it has a dot or caret, assume it's already properly formatted
+            if '.' in query or '^' in query:
+                return query, query
             
-            # Check if it's a valid ticker - be more lenient
-            # Valid if it has symbol, or longName, or shortName
-            if info and (info.get('symbol') or info.get('longName') or info.get('shortName') or len(info) > 5):
-                # Try to get a price to verify it's real
-                hist = ticker_obj.history(period='5d')
-                if len(hist) > 0:
-                    return query.upper(), info.get('shortName', info.get('longName', query.upper()))
+            # If no suffix and not too long, try adding .NS for Indian stocks
+            if len(query) <= 10 and ' ' not in query:
+                # First, try as-is (might be US stock)
+                return query, query
             
-            # Strategy 2: Try common variations for Indian stocks
-            if not any(char in query for char in ['.', '^']):
-                # Try NSE listing
-                nse_ticker = f"{query.upper()}.NS"
-                ticker_obj = yf.Ticker(nse_ticker)
-                hist = ticker_obj.history(period='5d')
-                if len(hist) > 0:
-                    info = ticker_obj.info
-                    return nse_ticker, info.get('shortName', info.get('longName', nse_ticker))
-                
-                # Try BSE listing
-                bse_ticker = f"{query.upper()}.BO"
-                ticker_obj = yf.Ticker(bse_ticker)
-                hist = ticker_obj.history(period='5d')
-                if len(hist) > 0:
-                    info = ticker_obj.info
-                    return bse_ticker, info.get('shortName', info.get('longName', bse_ticker))
-            
-            # Strategy 3: If it looks like a company name, inform user
-            if ' ' in query or len(query) > 5:
+            # If it looks like a company name (has space or very long), flag it
+            if ' ' in query or len(query) > 10:
                 return None, "name_detected"
             
-            return None, None
+            # Default: return as-is
+            return query, query
             
         except Exception as e:
-            # On error, try to just return the ticker as-is
-            # Let the fetch_data method handle validation
+            # On any error, just return the query as-is
             return query.upper(), query.upper()
     
     def fetch_data(self, period="5y", start_date=None, end_date=None):
-        """Fetch historical price data"""
-        try:
-            ticker_obj = yf.Ticker(self.ticker)
-            self.info = ticker_obj.info
-            
-            if start_date and end_date:
-                self.data = ticker_obj.history(start=start_date, end=end_date)
-            else:
-                self.data = ticker_obj.history(period=period)
-            
-            # Fetch benchmark data
-            benchmark_obj = yf.Ticker(self.benchmark)
-            if start_date and end_date:
-                self.benchmark_data = benchmark_obj.history(start=start_date, end=end_date)
-            else:
-                self.benchmark_data = benchmark_obj.history(period=period)
-            
-            return True
-        except Exception as e:
-            st.error(f"Error fetching data: {str(e)}")
-            return False
+        """Fetch historical price data with retry logic"""
+        import time
+        
+        max_retries = 3
+        retry_delay = 2  # seconds
+        
+        for attempt in range(max_retries):
+            try:
+                # Add small delay between retries to avoid rate limiting
+                if attempt > 0:
+                    time.sleep(retry_delay * attempt)
+                
+                ticker_obj = yf.Ticker(self.ticker)
+                
+                # Fetch security data
+                if start_date and end_date:
+                    self.data = ticker_obj.history(start=start_date, end=end_date)
+                else:
+                    self.data = ticker_obj.history(period=period)
+                
+                # Check if we got any data
+                if self.data is None or len(self.data) == 0:
+                    if attempt < max_retries - 1:
+                        continue  # Retry
+                    return False
+                
+                # Only fetch info if data fetch succeeded (to avoid rate limits)
+                try:
+                    self.info = ticker_obj.info
+                except:
+                    self.info = {}  # Continue without info
+                
+                # Fetch benchmark data
+                benchmark_obj = yf.Ticker(self.benchmark)
+                if start_date and end_date:
+                    self.benchmark_data = benchmark_obj.history(start=start_date, end=end_date)
+                else:
+                    self.benchmark_data = benchmark_obj.history(period=period)
+                
+                # Success if we got here
+                return True
+                
+            except Exception as e:
+                error_msg = str(e).lower()
+                
+                # Check if it's a rate limit error
+                if 'rate' in error_msg or '429' in error_msg or 'many requests' in error_msg:
+                    if attempt < max_retries - 1:
+                        st.warning(f"⏳ Rate limited by Yahoo Finance. Retrying in {retry_delay * (attempt + 1)} seconds... (Attempt {attempt + 1}/{max_retries})")
+                        continue
+                    else:
+                        st.error("⚠️ Yahoo Finance rate limit reached. Please wait a minute and try again.")
+                        return False
+                
+                # Other errors
+                if attempt < max_retries - 1:
+                    continue
+                else:
+                    st.error(f"Error fetching data: {str(e)}")
+                    return False
+        
+        return False
     
     def calculate_moving_averages(self):
         """Calculate 50, 100, and 200-day moving averages"""
