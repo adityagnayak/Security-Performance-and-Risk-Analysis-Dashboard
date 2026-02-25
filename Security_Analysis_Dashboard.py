@@ -1017,9 +1017,18 @@ def main():
             temp_analyzer = SecurityAnalyzer(security_input, benchmark)
             resolved_ticker, name_or_status = temp_analyzer.search_ticker(security_input)
             
+            # If search_ticker returns None, just try using the input as-is
+            if not resolved_ticker:
+                resolved_ticker = security_input.upper()
+                name_or_status = resolved_ticker
+            
+            # Always try to analyze - let fetch_data determine if it's valid
             if resolved_ticker:
-                # Successfully found ticker
-                st.info(f"Found: {name_or_status} ({resolved_ticker})")
+                # Show what we're analyzing
+                if name_or_status and name_or_status != "name_detected":
+                    st.info(f"Analyzing: {name_or_status} ({resolved_ticker})")
+                else:
+                    st.info(f"Analyzing: {resolved_ticker}")
                 
                 # Check if benchmark is appropriate for this ticker
                 temp_analyzer_check = SecurityAnalyzer(resolved_ticker, benchmark)
@@ -1062,45 +1071,20 @@ def main():
                             'currency_name': None
                         }
                     else:
-                        st.error(f"❌ Unable to fetch data for {resolved_ticker}. Please verify the ticker and try again.")
-            
-            elif name_or_status == "name_detected":
-                # Looks like a company name - provide helpful error
-                st.error(f"""
-                ❌ **'{security_input}'** appears to be a company name, not a ticker symbol.
-                
-                **Yahoo Finance requires ticker symbols.** Please try:
-                
-                **For US Stocks**: Use the ticker symbol
-                - Example: Instead of "Apple Inc.", use **AAPL**
-                - Example: Instead of "Microsoft", use **MSFT**
-                
-                **For Indian Stocks**: Add .NS (NSE) or .BO (BSE)
-                - Example: Instead of "Tata Motors", use **TATAMOTORS.NS**
-                - Example: Instead of "Reliance", use **RELIANCE.NS** or **RELIANCE.BO**
-                
-                **Not sure of the ticker?** Search on:
-                - 🔍 [Yahoo Finance](https://finance.yahoo.com)
-                - 🔍 [NSE India](https://www.nseindia.com) (for Indian stocks)
-                - 🔍 [BSE India](https://www.bseindia.com) (for Indian stocks)
-                """)
-            
-            else:
-                # Invalid ticker or other error
-                st.error(f"""
-                ❌ Could not find ticker **'{security_input}'**
-                
-                **Please check:**
-                - Ticker symbol is correct (e.g., AAPL, MSFT, GOOGL)
-                - For Indian stocks, add .NS or .BO (e.g., RELIANCE.NS, TCS.BO)
-                - For international stocks, check the exchange suffix
-                
-                **Common formats:**
-                - US stocks: AAPL, TSLA, NVDA
-                - Indian stocks: RELIANCE.NS, TCS.BO, INFY.NS
-                - UK stocks: HSBA.L, BP.L
-                - Japanese stocks: 7203.T, 9984.T
-                """)
+                        st.error(f"""
+                        ❌ Could not find ticker '{resolved_ticker}'
+                        
+                        **Please check:**
+                        - Ticker symbol is correct (e.g., AAPL, MSFT, GOOGL)
+                        - For Indian stocks, add .NS or .BO (e.g., RELIANCE.NS, TCS.BO)
+                        - For international stocks, check the exchange suffix
+                        
+                        **Common formats:**
+                        - US stocks: AAPL, TSLA, NVDA
+                        - Indian stocks: RELIANCE.NS, TCS.BO, INFY.NS
+                        - UK stocks: HSBA.L, BP.L
+                        - Japanese stocks: 7203.T, 9984.T
+                        """)
     
     # Display results from session state (persists across reruns)
     if st.session_state.analyzer is not None:
