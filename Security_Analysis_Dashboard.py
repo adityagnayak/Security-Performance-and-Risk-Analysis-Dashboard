@@ -22,248 +22,118 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Apply custom CSS (responsive and adaptive to browser theme)
+# Apply custom CSS (embedded for compatibility)
 st.markdown("""
     <style>
-    /* ===== FONT FAMILY ===== */
     * {
         font-family: 'Times New Roman', Times, serif !important;
     }
-    
-    /* ===== LIGHT/DARK MODE ADAPTIVE COLORS ===== */
-    /* Light mode (browser default) */
-    :root {
-        --bg-primary: #ffffff;
-        --bg-secondary: #f8f9fa;
-        --bg-metric: #e8eef3;
-        --bg-sidebar: #f0f2f6;
-        --text-primary: #1f1f1f;
-        --text-secondary: #4a4a4a;
-        --border-color: #d0d0d0;
-        --accent-blue: #1f77b4;
-    }
-    
-    /* Dark mode (browser prefers dark) */
-    @media (prefers-color-scheme: dark) {
-        :root {
-            --bg-primary: #0e1117;
-            --bg-secondary: #1e1e1e;
-            --bg-metric: #2c3e50;
-            --bg-sidebar: #1e1e1e;
-            --text-primary: #ffffff;
-            --text-secondary: #e0e0e0;
-            --border-color: #4a4a4a;
-            --accent-blue: #1f77b4;
-        }
-    }
-    
-    /* ===== MOBILE RESPONSIVENESS ===== */
-    /* Base mobile styles */
-    @media only screen and (max-width: 768px) {
-        .main {
-            padding: 0.5rem !important;
-        }
-        
-        /* Stack columns on mobile */
-        .row-widget.stHorizontal {
-            flex-direction: column !important;
-        }
-        
-        /* Full width metrics on mobile */
-        [data-testid="column"] {
-            width: 100% !important;
-            flex: 100% !important;
-        }
-        
-        /* Adjust disclaimer for mobile */
-        .disclaimer {
-            position: relative !important;
-            left: 0 !important;
-            font-size: 12px !important;
-            padding: 10px !important;
-            margin-top: 2rem !important;
-        }
-        
-        /* Sidebar adjustments for mobile */
-        [data-testid="stSidebar"] {
-            width: 100% !important;
-        }
-        
-        /* Smaller fonts on mobile */
-        h1 {
-            font-size: 1.5rem !important;
-        }
-        
-        h2 {
-            font-size: 1.2rem !important;
-        }
-        
-        h3 {
-            font-size: 1rem !important;
-        }
-        
-        /* Chart height adjustments */
-        .js-plotly-plot {
-            height: 300px !important;
-        }
-    }
-    
-    /* Tablet styles */
-    @media only screen and (min-width: 769px) and (max-width: 1024px) {
-        .main {
-            padding: 0.75rem !important;
-        }
-        
-        .disclaimer {
-            left: 16rem !important;
-        }
-    }
-    
-    /* Desktop styles */
-    @media only screen and (min-width: 1025px) {
-        .main {
-            padding: 0rem 1rem;
-        }
-        
-        .disclaimer {
-            left: 21rem !important;
-        }
-    }
-    
-    /* ===== CORE LAYOUT ===== */
     .main {
-        background-color: var(--bg-primary);
+        padding: 0rem 1rem;
     }
-    
-    /* ===== SIDEBAR ===== */
+    /* Ensure sidebar is visible */
     [data-testid="stSidebar"] {
         display: block !important;
         visibility: visible !important;
     }
-    
     [data-testid="stSidebar"] > div {
-        background-color: var(--bg-sidebar);
+        background-color: #1e1e1e;
     }
-    
+    /* Sidebar text colors */
     [data-testid="stSidebar"] label, 
     [data-testid="stSidebar"] p, 
     [data-testid="stSidebar"] span,
-    [data-testid="stSidebar"] div,
-    [data-testid="stSidebar"] h1,
-    [data-testid="stSidebar"] h2,
-    [data-testid="stSidebar"] h3 {
-        color: var(--text-primary) !important;
+    [data-testid="stSidebar"] div {
+        color: #ffffff !important;
     }
-    
-    /* ===== METRICS CARDS ===== */
     .stMetric {
-        background-color: var(--bg-metric) !important;
+        background-color: #2c3e50 !important;
         padding: 15px;
         border-radius: 5px;
-        border-left: 3px solid var(--accent-blue);
-        margin-bottom: 10px;
+        border-left: 3px solid #1f77b4;
     }
-    
-    .stMetric label, 
-    .stMetric div,
-    [data-testid="stMetricValue"],
-    [data-testid="stMetricLabel"] {
-        color: var(--text-primary) !important;
+    .stMetric label, .stMetric div {
+        color: #ffffff !important;
         font-family: 'Times New Roman', Times, serif !important;
     }
-    
-    /* ===== TYPOGRAPHY ===== */
+    .metric-card {
+        background-color: #2c3e50;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin: 10px 0;
+    }
     h1 {
-        color: var(--text-primary);
+        color: #ffffff;
         font-weight: 600;
         padding-bottom: 1rem;
-        border-bottom: 2px solid var(--border-color);
+        border-bottom: 2px solid #e0e0e0;
         font-family: 'Times New Roman', Times, serif !important;
     }
-    
     h2, h3 {
-        color: var(--text-primary);
+        color: #ffffff;
         font-weight: 500;
         font-family: 'Times New Roman', Times, serif !important;
     }
-    
-    p, label, span, div {
-        color: var(--text-primary) !important;
-        font-family: 'Times New Roman', Times, serif !important;
+    .stAlert {
+        background-color: #2c3e50 !important;
+        border-left: 4px solid #1f77b4;
+        color: #ffffff !important;
     }
-    
-    /* ===== ALERT MESSAGES ===== */
-    .stAlert,
-    [data-testid="stAlert"] {
-        background-color: var(--bg-metric) !important;
-        border-left: 4px solid var(--accent-blue);
-        color: var(--text-primary) !important;
+    /* Success messages */
+    .stSuccess {
+        background-color: #2c3e50 !important;
+        color: #ffffff !important;
+        border-left: 4px solid #28a745 !important;
     }
-    
-    .stSuccess,
-    [data-testid="stAlert"][data-baseweb="notification"] {
-        background-color: var(--bg-metric) !important;
-        color: var(--text-primary) !important;
-    }
-    
+    /* Info messages */
     .stInfo {
-        background-color: var(--bg-metric) !important;
-        color: var(--text-primary) !important;
+        background-color: #2c3e50 !important;
+        color: #ffffff !important;
         border-left: 4px solid #17a2b8 !important;
     }
-    
+    /* Warning messages */
     .stWarning {
-        background-color: var(--bg-metric) !important;
-        color: var(--text-primary) !important;
+        background-color: #2c3e50 !important;
+        color: #ffffff !important;
         border-left: 4px solid #ffc107 !important;
     }
-    
+    /* Error messages */
     .stError {
-        background-color: var(--bg-metric) !important;
-        color: var(--text-primary) !important;
+        background-color: #2c3e50 !important;
+        color: #ffffff !important;
         border-left: 4px solid #dc3545 !important;
     }
-    
-    [data-testid="stAlert"] p, 
-    [data-testid="stAlert"] div {
-        color: var(--text-primary) !important;
+    /* Target alert divs */
+    [data-testid="stAlert"] {
+        background-color: #2c3e50 !important;
+        color: #ffffff !important;
     }
-    
-    /* ===== INPUTS ===== */
-    input, select, textarea {
-        background-color: var(--bg-secondary) !important;
-        color: var(--text-primary) !important;
-        border-color: var(--border-color) !important;
+    [data-testid="stAlert"] p, [data-testid="stAlert"] div {
+        color: #ffffff !important;
     }
-    
-    /* ===== BUTTONS ===== */
-    .stButton > button {
-        background-color: var(--bg-metric);
-        color: var(--text-primary);
-        border: 1px solid var(--border-color);
+    p, label, span, div {
+        color: #ffffff !important;
+        font-family: 'Times New Roman', Times, serif !important;
     }
-    
-    .stButton > button:hover {
-        background-color: var(--accent-blue);
-        color: #ffffff;
-        border-color: var(--accent-blue);
+    [data-testid="stMetricValue"] {
+        color: #ffffff !important;
+        font-family: 'Times New Roman', Times, serif !important;
     }
-    
-    /* ===== DATAFRAMES ===== */
-    .dataframe {
-        color: var(--text-primary) !important;
-        background-color: var(--bg-secondary) !important;
+    [data-testid="stMetricLabel"] {
+        color: #ffffff !important;
+        font-family: 'Times New Roman', Times, serif !important;
     }
-    
-    /* ===== HIDE STREAMLIT BRANDING ===== */
+    /* Hide Streamlit branding but keep sidebar */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    .stDeployButton {display: none;}
+    .stDeployButton {display:none;}
     
-    /* ===== DISCLAIMER ===== */
+    /* Disclaimer styling - respects main content area */
     .disclaimer {
         position: fixed;
         bottom: 0;
+        left: 21rem;
         right: 0;
         background-color: #ff0000;
         color: #ffffff;
@@ -274,60 +144,6 @@ st.markdown("""
         z-index: 999;
         border-top: 3px solid #ffffff;
         font-family: 'Times New Roman', Times, serif !important;
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
-    }
-    
-    /* Ensure disclaimer text is always white */
-    .disclaimer, .disclaimer * {
-        color: #ffffff !important;
-    }
-    
-    /* ===== MOBILE SPECIFIC OPTIMIZATIONS ===== */
-    @media only screen and (max-width: 768px) {
-        /* Touch-friendly buttons */
-        .stButton > button {
-            min-height: 44px;
-            font-size: 16px;
-            padding: 12px 24px;
-        }
-        
-        /* Larger input fields for mobile */
-        input, select {
-            font-size: 16px !important;
-            min-height: 44px;
-        }
-        
-        /* Prevent zoom on input focus (iOS) */
-        input:focus, select:focus, textarea:focus {
-            font-size: 16px !important;
-        }
-        
-        /* Scrollable tables on mobile */
-        .dataframe-container {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-    }
-    
-    /* ===== ACCESSIBILITY ===== */
-    /* High contrast for better readability */
-    @media (prefers-contrast: high) {
-        :root {
-            --border-color: #000000;
-        }
-        
-        .stMetric {
-            border-left-width: 5px;
-        }
-    }
-    
-    /* Reduced motion for users who prefer it */
-    @media (prefers-reduced-motion: reduce) {
-        * {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
-        }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -412,94 +228,66 @@ class SecurityAnalyzer:
     def search_ticker(self, query):
         """
         Search for ticker symbol from company name or ticker.
-        Simplified to avoid rate limiting - minimal validation.
+        Tries multiple strategies to find the correct ticker.
         """
         try:
-            query = query.strip().upper()
+            query = query.strip()
             
-            # If it has a dot or caret, assume it's already properly formatted
-            if '.' in query or '^' in query:
-                return query, query
+            # Strategy 1: Direct ticker lookup (if already a ticker)
+            ticker_obj = yf.Ticker(query.upper())
+            info = ticker_obj.info
             
-            # If no suffix and not too long, try adding .NS for Indian stocks
-            if len(query) <= 10 and ' ' not in query:
-                # First, try as-is (might be US stock)
-                return query, query
+            # Check if it's a valid ticker with price data
+            if info and info.get('regularMarketPrice') is not None:
+                return query.upper(), info.get('shortName', query.upper())
             
-            # If it looks like a company name (has space or very long), flag it
-            if ' ' in query or len(query) > 10:
+            # Strategy 2: Try common variations for Indian stocks
+            if not any(char in query for char in ['.', '^']):
+                # Try NSE listing
+                nse_ticker = f"{query.upper()}.NS"
+                ticker_obj = yf.Ticker(nse_ticker)
+                info = ticker_obj.info
+                if info and info.get('regularMarketPrice') is not None:
+                    return nse_ticker, info.get('shortName', nse_ticker)
+                
+                # Try BSE listing
+                bse_ticker = f"{query.upper()}.BO"
+                ticker_obj = yf.Ticker(bse_ticker)
+                info = ticker_obj.info
+                if info and info.get('regularMarketPrice') is not None:
+                    return bse_ticker, info.get('shortName', bse_ticker)
+            
+            # Strategy 3: If it looks like a company name, inform user
+            if ' ' in query or len(query) > 5:
                 return None, "name_detected"
             
-            # Default: return as-is
-            return query, query
+            return None, None
             
         except Exception as e:
-            # On any error, just return the query as-is
-            return query.upper(), query.upper()
+            return None, None
     
     def fetch_data(self, period="5y", start_date=None, end_date=None):
-        """Fetch historical price data with retry logic"""
-        import time
-        
-        max_retries = 3
-        retry_delay = 2  # seconds
-        
-        for attempt in range(max_retries):
-            try:
-                # Add small delay between retries to avoid rate limiting
-                if attempt > 0:
-                    time.sleep(retry_delay * attempt)
-                
-                ticker_obj = yf.Ticker(self.ticker)
-                
-                # Fetch security data
-                if start_date and end_date:
-                    self.data = ticker_obj.history(start=start_date, end=end_date)
-                else:
-                    self.data = ticker_obj.history(period=period)
-                
-                # Check if we got any data
-                if self.data is None or len(self.data) == 0:
-                    if attempt < max_retries - 1:
-                        continue  # Retry
-                    return False
-                
-                # Only fetch info if data fetch succeeded (to avoid rate limits)
-                try:
-                    self.info = ticker_obj.info
-                except:
-                    self.info = {}  # Continue without info
-                
-                # Fetch benchmark data
-                benchmark_obj = yf.Ticker(self.benchmark)
-                if start_date and end_date:
-                    self.benchmark_data = benchmark_obj.history(start=start_date, end=end_date)
-                else:
-                    self.benchmark_data = benchmark_obj.history(period=period)
-                
-                # Success if we got here
-                return True
-                
-            except Exception as e:
-                error_msg = str(e).lower()
-                
-                # Check if it's a rate limit error
-                if 'rate' in error_msg or '429' in error_msg or 'many requests' in error_msg:
-                    if attempt < max_retries - 1:
-                        st.warning(f"⏳ Rate limited by Yahoo Finance. Retrying in {retry_delay * (attempt + 1)} seconds... (Attempt {attempt + 1}/{max_retries})")
-                        continue
-                    else:
-                        st.error("⚠️ Yahoo Finance rate limit reached. Please wait a minute and try again.")
-                        return False
-                
-                # Other errors
-                if attempt < max_retries - 1:
-                    continue
-                else:
-                    st.error(f"Error fetching data: {str(e)}")
-                    return False
-        
-        return False
+        """Fetch historical price data"""
+        try:
+            ticker_obj = yf.Ticker(self.ticker)
+            self.info = ticker_obj.info
+            
+            if start_date and end_date:
+                self.data = ticker_obj.history(start=start_date, end=end_date)
+            else:
+                self.data = ticker_obj.history(period=period)
+            
+            # Fetch benchmark data
+            benchmark_obj = yf.Ticker(self.benchmark)
+            if start_date and end_date:
+                self.benchmark_data = benchmark_obj.history(start=start_date, end=end_date)
+            else:
+                self.benchmark_data = benchmark_obj.history(period=period)
+            
+            return True
+        except Exception as e:
+            st.error(f"Error fetching data: {str(e)}")
+            return False
     
     def calculate_moving_averages(self):
         """Calculate 50, 100, and 200-day moving averages"""
@@ -688,44 +476,17 @@ class SecurityAnalyzer:
     
     def get_currency_symbol(self):
         """Get currency symbol based on stock's country/exchange"""
-        currency = None
+        if not self.info:
+            return '$'
         
-        # Try to get currency from info first
-        if self.info and isinstance(self.info, dict) and len(self.info) > 0:
-            currency = self.info.get('currency')
-        
-        # If no currency in info, infer from ticker suffix
-        if not currency:
-            ticker_upper = self.ticker.upper()
-            if '.L' in ticker_upper:
-                currency = 'GBp'  # UK stocks usually in pence
-            elif '.NS' in ticker_upper or '.BO' in ticker_upper:
-                currency = 'INR'  # Indian stocks
-            elif '.T' in ticker_upper:
-                currency = 'JPY'  # Japanese stocks
-            elif '.HK' in ticker_upper:
-                currency = 'HKD'  # Hong Kong stocks
-            elif '.AX' in ticker_upper:
-                currency = 'AUD'  # Australian stocks
-            elif '.TO' in ticker_upper:
-                currency = 'CAD'  # Canadian stocks
-            elif '.PA' in ticker_upper:
-                currency = 'EUR'  # Paris stocks
-            elif '.DE' in ticker_upper or '.SW' in ticker_upper:
-                currency = 'EUR'  # German/Swiss stocks (often EUR)
-            else:
-                currency = 'USD'  # Default to USD for US stocks
-        
-        # Handle GBp (pence) - special case for UK stocks
-        if currency == 'GBp':
-            return 'p'  # Pence symbol
+        # Get currency from info
+        currency = self.info.get('currency', 'USD')
         
         # Currency symbol mapping
         currency_symbols = {
             'USD': '$',
             'EUR': '€',
             'GBP': '£',
-            'GBp': 'p',  # Pence
             'JPY': '¥',
             'CNY': '¥',
             'INR': '₹',
@@ -754,43 +515,14 @@ class SecurityAnalyzer:
             'SAR': 'SAR ',
         }
         
-        return currency_symbols.get(currency, currency + ' ' if currency else '$')
+        return currency_symbols.get(currency, currency + ' ')
     
     def get_currency_name(self):
         """Get full currency name"""
-        currency = None
+        if not self.info:
+            return 'USD'
         
-        # Try to get from info first
-        if self.info and isinstance(self.info, dict) and len(self.info) > 0:
-            currency = self.info.get('currency')
-        
-        # If no currency in info, infer from ticker suffix
-        if not currency:
-            ticker_upper = self.ticker.upper()
-            if '.L' in ticker_upper:
-                currency = 'GBp'
-            elif '.NS' in ticker_upper or '.BO' in ticker_upper:
-                currency = 'INR'
-            elif '.T' in ticker_upper:
-                currency = 'JPY'
-            elif '.HK' in ticker_upper:
-                currency = 'HKD'
-            elif '.AX' in ticker_upper:
-                currency = 'AUD'
-            elif '.TO' in ticker_upper:
-                currency = 'CAD'
-            elif '.PA' in ticker_upper:
-                currency = 'EUR'
-            elif '.DE' in ticker_upper or '.SW' in ticker_upper:
-                currency = 'EUR'
-            else:
-                currency = 'USD'
-        
-        # Handle pence specially
-        if currency == 'GBp':
-            return 'GBp (Pence)'
-        
-        return currency if currency else 'USD'
+        return self.info.get('currency', 'USD')
 
 
 def format_number(num, is_percentage=False, is_currency=False, currency_symbol='$'):
@@ -1002,7 +734,7 @@ def main():
         )
         
         # Add helpful hint below input
-        st.caption("💡 Tip: Use ticker symbols. For Indian stocks add .NS (NSE) or .BO (BSE)")
+        st.caption("💡 Tip: Use ticker symbols. For UK stocks add .L.")
         
         # Benchmark
         benchmark = st.selectbox(
@@ -1084,7 +816,7 @@ def main():
             risk_free_rate = 0.04
             var_confidence = 0.95
         
-        analyze_button = st.button("🔍 Analyze Security", type="primary", width="stretch")
+        analyze_button = st.button("🔍 Analyze Security", type="primary", use_container_width=True)
     
     # Main content
     if analyze_button and security_input:
@@ -1093,18 +825,9 @@ def main():
             temp_analyzer = SecurityAnalyzer(security_input, benchmark)
             resolved_ticker, name_or_status = temp_analyzer.search_ticker(security_input)
             
-            # If search_ticker returns None, just try using the input as-is
-            if not resolved_ticker:
-                resolved_ticker = security_input.upper()
-                name_or_status = resolved_ticker
-            
-            # Always try to analyze - let fetch_data determine if it's valid
             if resolved_ticker:
-                # Show what we're analyzing
-                if name_or_status and name_or_status != "name_detected":
-                    st.info(f"Analyzing: {name_or_status} ({resolved_ticker})")
-                else:
-                    st.info(f"Analyzing: {resolved_ticker}")
+                # Successfully found ticker
+                st.info(f"Found: {name_or_status} ({resolved_ticker})")
                 
                 # Check if benchmark is appropriate for this ticker
                 temp_analyzer_check = SecurityAnalyzer(resolved_ticker, benchmark)
@@ -1121,15 +844,11 @@ def main():
                     💡 **Why?** Securities from different markets/exchanges often don't have overlapping trading days, which results in unreliable metrics (NaN values for Beta, correlation, etc.)
                     """)
                     
-                                
-                # Check if we need to force analysis with new benchmark
-                if 'force_analyze' in st.session_state and st.session_state.force_analyze:
-                    # Override benchmark with forced value
-                    benchmark = st.session_state.force_benchmark
-                    resolved_ticker = st.session_state.force_ticker
-                    # Clear flags
-                    st.session_state.force_analyze = False
-                    st.info(f"🔄 Re-analyzing {resolved_ticker} with recommended benchmark: {benchmark}")
+                    # Offer to auto-switch
+                    if st.button(f"✨ Auto-Switch to {suggested_benchmark}", key="auto_switch_benchmark"):
+                        benchmark = suggested_benchmark
+                        st.success(f"✅ Benchmark changed to {suggested_benchmark}")
+                        st.rerun()
                 
                 with st.spinner("Fetching and analyzing data..."):
                     # Initialize analyzer with resolved ticker
@@ -1151,20 +870,42 @@ def main():
                             'currency_name': None
                         }
                     else:
-                        st.error(f"""
-                        ❌ Could not find ticker '{resolved_ticker}'
-                        
-                        **Please check:**
-                        - Ticker symbol is correct (e.g., AAPL, MSFT, GOOGL)
-                        - For Indian stocks, add .NS or .BO (e.g., RELIANCE.NS, TCS.BO)
-                        - For international stocks, check the exchange suffix
-                        
-                        **Common formats:**
-                        - US stocks: AAPL, TSLA, NVDA
-                        - Indian stocks: RELIANCE.NS, TCS.BO, INFY.NS
-                        - UK stocks: HSBA.L, BP.L
-                        - Japanese stocks: 7203.T, 9984.T
-                        """)
+                        st.error(f"❌ Unable to fetch data for {resolved_ticker}. Please verify the ticker and try again.")
+            
+            elif name_or_status == "name_detected":
+                # Looks like a company name - provide helpful error
+                st.error(f"""
+                ❌ **'{security_input}'** appears to be a company name, not a ticker symbol.
+                
+                **Yahoo Finance requires ticker symbols.** Please try:
+                
+                **For US Stocks**: Use the ticker symbol
+                - Example: Instead of "Apple Inc.", use **AAPL**
+                - Example: Instead of "Microsoft", use **MSFT**
+                
+                **For Other Exchanges' Stocks**: Add .NS (NSE) or .L (LSEG) or .HK (SEHK)
+                - Example: Instead of "Tata Motors", use **TATAMOTORS.NS**
+                - Example: Instead of "Rolls-Royces Holdings plc", use **RR.L**
+                
+                **Not sure of the ticker?** Search on:
+                - 🔍 [Yahoo Finance](https://finance.yahoo.com)
+               """)
+            
+            else:
+                # Invalid ticker or other error
+                st.error(f"""
+                ❌ Could not find ticker **'{security_input}'**
+                
+                **Please check:**
+                - Ticker symbol is correct (e.g., AAPL, MSFT, GOOGL)
+                - For international stocks, check the exchange suffix
+                
+                **Common formats:**
+                - US stocks: AAPL, TSLA, NVDA
+                - Indian stocks: RELIANCE.NS, TCS.BO, INFY.NS
+                - UK stocks: HSBA.L, BP.L
+                - Japanese stocks: 7203.T, 9984.T
+                """)
     
     # Display results from session state (persists across reruns)
     if st.session_state.analyzer is not None:
@@ -1227,7 +968,7 @@ def main():
             )
         
         # Price chart
-        st.plotly_chart(create_price_chart(analyzer), width="stretch")
+        st.plotly_chart(create_price_chart(analyzer), use_container_width=True)
         
         st.markdown("---")
         
@@ -1346,19 +1087,19 @@ def main():
         
         # Charts - show cumulative returns for all, other charts only in advanced
         if st.session_state.analysis_mode == "Basic":
-            st.plotly_chart(create_returns_chart(analyzer), width="stretch")
+            st.plotly_chart(create_returns_chart(analyzer), use_container_width=True)
         else:
             # Advanced mode: show all charts
             col1, col2 = st.columns(2)
             
             with col1:
-                st.plotly_chart(create_returns_chart(analyzer), width="stretch")
+                st.plotly_chart(create_returns_chart(analyzer), use_container_width=True)
             
             with col2:
-                st.plotly_chart(create_drawdown_chart(analyzer), width="stretch")
+                st.plotly_chart(create_drawdown_chart(analyzer), use_container_width=True)
             
             # Distribution chart
-            st.plotly_chart(create_returns_distribution(analyzer), width="stretch")
+            st.plotly_chart(create_returns_distribution(analyzer), use_container_width=True)
         
         st.markdown("---")
         
@@ -1461,7 +1202,7 @@ def main():
             }
             
             summary_df = pd.DataFrame(summary_data)
-            st.dataframe(summary_df, width="stretch", hide_index=True)
+            st.dataframe(summary_df, use_container_width=True, hide_index=True)
     
     elif analyze_button and not security_input:
         st.warning("⚠️ Please enter a security symbol or name.")
@@ -1496,7 +1237,7 @@ def main():
         - Switch to Advanced mode anytime for detailed metrics
         - The dashboard remembers your analysis - change modes without re-analyzing!
         - Use NSE stocks with .NS suffix (e.g., RELIANCE.NS, TCS.NS)
-        - Use BSE stocks with .BO suffix (e.g., RELIANCE.BO)
+        - Use LSEG stocks with .L suffix (e.g., AZN.L, RR.L)
         """)
 
 
