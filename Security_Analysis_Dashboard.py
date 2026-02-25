@@ -421,25 +421,31 @@ class SecurityAnalyzer:
             ticker_obj = yf.Ticker(query.upper())
             info = ticker_obj.info
             
-            # Check if it's a valid ticker with price data
-            if info and info.get('regularMarketPrice') is not None:
-                return query.upper(), info.get('shortName', query.upper())
+            # Check if it's a valid ticker - be more lenient
+            # Valid if it has symbol, or longName, or shortName
+            if info and (info.get('symbol') or info.get('longName') or info.get('shortName') or len(info) > 5):
+                # Try to get a price to verify it's real
+                hist = ticker_obj.history(period='5d')
+                if len(hist) > 0:
+                    return query.upper(), info.get('shortName', info.get('longName', query.upper()))
             
             # Strategy 2: Try common variations for Indian stocks
             if not any(char in query for char in ['.', '^']):
                 # Try NSE listing
                 nse_ticker = f"{query.upper()}.NS"
                 ticker_obj = yf.Ticker(nse_ticker)
-                info = ticker_obj.info
-                if info and info.get('regularMarketPrice') is not None:
-                    return nse_ticker, info.get('shortName', nse_ticker)
+                hist = ticker_obj.history(period='5d')
+                if len(hist) > 0:
+                    info = ticker_obj.info
+                    return nse_ticker, info.get('shortName', info.get('longName', nse_ticker))
                 
                 # Try BSE listing
                 bse_ticker = f"{query.upper()}.BO"
                 ticker_obj = yf.Ticker(bse_ticker)
-                info = ticker_obj.info
-                if info and info.get('regularMarketPrice') is not None:
-                    return bse_ticker, info.get('shortName', bse_ticker)
+                hist = ticker_obj.history(period='5d')
+                if len(hist) > 0:
+                    info = ticker_obj.info
+                    return bse_ticker, info.get('shortName', info.get('longName', bse_ticker))
             
             # Strategy 3: If it looks like a company name, inform user
             if ' ' in query or len(query) > 5:
@@ -448,7 +454,9 @@ class SecurityAnalyzer:
             return None, None
             
         except Exception as e:
-            return None, None
+            # On error, try to just return the ticker as-is
+            # Let the fetch_data method handle validation
+            return query.upper(), query.upper()
     
     def fetch_data(self, period="5y", start_date=None, end_date=None):
         """Fetch historical price data"""
