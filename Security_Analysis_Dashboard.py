@@ -688,11 +688,33 @@ class SecurityAnalyzer:
     
     def get_currency_symbol(self):
         """Get currency symbol based on stock's country/exchange"""
-        if not self.info:
-            return '$'
+        currency = None
         
-        # Get currency from info
-        currency = self.info.get('currency', 'USD')
+        # Try to get currency from info first
+        if self.info and isinstance(self.info, dict) and len(self.info) > 0:
+            currency = self.info.get('currency')
+        
+        # If no currency in info, infer from ticker suffix
+        if not currency:
+            ticker_upper = self.ticker.upper()
+            if '.L' in ticker_upper:
+                currency = 'GBp'  # UK stocks usually in pence
+            elif '.NS' in ticker_upper or '.BO' in ticker_upper:
+                currency = 'INR'  # Indian stocks
+            elif '.T' in ticker_upper:
+                currency = 'JPY'  # Japanese stocks
+            elif '.HK' in ticker_upper:
+                currency = 'HKD'  # Hong Kong stocks
+            elif '.AX' in ticker_upper:
+                currency = 'AUD'  # Australian stocks
+            elif '.TO' in ticker_upper:
+                currency = 'CAD'  # Canadian stocks
+            elif '.PA' in ticker_upper:
+                currency = 'EUR'  # Paris stocks
+            elif '.DE' in ticker_upper or '.SW' in ticker_upper:
+                currency = 'EUR'  # German/Swiss stocks (often EUR)
+            else:
+                currency = 'USD'  # Default to USD for US stocks
         
         # Handle GBp (pence) - special case for UK stocks
         if currency == 'GBp':
@@ -732,20 +754,43 @@ class SecurityAnalyzer:
             'SAR': 'SAR ',
         }
         
-        return currency_symbols.get(currency, currency + ' ')
+        return currency_symbols.get(currency, currency + ' ' if currency else '$')
     
     def get_currency_name(self):
         """Get full currency name"""
-        if not self.info:
-            return 'USD'
+        currency = None
         
-        currency = self.info.get('currency', 'USD')
+        # Try to get from info first
+        if self.info and isinstance(self.info, dict) and len(self.info) > 0:
+            currency = self.info.get('currency')
+        
+        # If no currency in info, infer from ticker suffix
+        if not currency:
+            ticker_upper = self.ticker.upper()
+            if '.L' in ticker_upper:
+                currency = 'GBp'
+            elif '.NS' in ticker_upper or '.BO' in ticker_upper:
+                currency = 'INR'
+            elif '.T' in ticker_upper:
+                currency = 'JPY'
+            elif '.HK' in ticker_upper:
+                currency = 'HKD'
+            elif '.AX' in ticker_upper:
+                currency = 'AUD'
+            elif '.TO' in ticker_upper:
+                currency = 'CAD'
+            elif '.PA' in ticker_upper:
+                currency = 'EUR'
+            elif '.DE' in ticker_upper or '.SW' in ticker_upper:
+                currency = 'EUR'
+            else:
+                currency = 'USD'
         
         # Handle pence specially
         if currency == 'GBp':
             return 'GBp (Pence)'
         
-        return currency
+        return currency if currency else 'USD'
 
 
 def format_number(num, is_percentage=False, is_currency=False, currency_symbol='$'):
@@ -960,22 +1005,9 @@ def main():
         st.caption("💡 Tip: Use ticker symbols. For Indian stocks add .NS (NSE) or .BO (BSE)")
         
         # Benchmark
-        # Check if there's a suggested benchmark in session state
-        if 'suggested_benchmark' in st.session_state and st.session_state.suggested_benchmark:
-            default_benchmark = st.session_state.suggested_benchmark
-            # Find index in list
-            benchmark_list = ["SPY", "QQQ", "DIA", "IWM", "^GSPC", "^DJI", "^IXIC", "^NSEI", "^BSESN", "^FTSE", "^N225", "^HSI", "^AXJO", "^GSPTSE", "^FCHI", "^GDAXI", "^SSMI"]
-            try:
-                default_index = benchmark_list.index(default_benchmark)
-            except ValueError:
-                default_index = 0
-        else:
-            default_index = 0
-            
         benchmark = st.selectbox(
             "Benchmark Index",
             ["SPY", "QQQ", "DIA", "IWM", "^GSPC", "^DJI", "^IXIC", "^NSEI", "^BSESN", "^FTSE", "^N225", "^HSI", "^AXJO", "^GSPTSE", "^FCHI", "^GDAXI", "^SSMI"],
-            index=default_index,
             help="Select benchmark for comparative analysis\nUS: SPY/QQQ/DIA | India: ^NSEI/^BSESN | UK: ^FTSE | Japan: ^N225 | HK: ^HSI | AU: ^AXJO | CA: ^GSPTSE | FR: ^FCHI | DE: ^GDAXI | CH: ^SSMI",
             key="benchmark"
         )
@@ -1090,11 +1122,23 @@ def main():
                     """)
                     
                     # Offer to auto-switch
-                    if st.button(f"✨ Auto-Switch to {suggested_benchmark}", key="auto_switch_benchmark"):
-                        # Store suggested benchmark in session state
-                        st.session_state.suggested_benchmark = suggested_benchmark
-                        # Rerun to update the selectbox
+                    if st.button(f"✨ Switch to {suggested_benchmark} & Re-analyze", key="auto_switch_benchmark", type="primary"):
+                        # Update the benchmark value in session state widget
+                        st.query_params['suggested_bench'] = suggested_benchmark
+                        # Force the analyze to happen with new benchmark on rerun
+                        st.session_state['force_benchmark'] = suggested_benchmark
+                        st.session_state['force_ticker'] = resolved_ticker
+                        st.session_state['force_analyze'] = True
                         st.rerun()
+                
+                # Check if we need to force analysis with new benchmark
+                if 'force_analyze' in st.session_state and st.session_state.force_analyze:
+                    # Override benchmark with forced value
+                    benchmark = st.session_state.force_benchmark
+                    resolved_ticker = st.session_state.force_ticker
+                    # Clear flags
+                    st.session_state.force_analyze = False
+                    st.info(f"🔄 Re-analyzing {resolved_ticker} with recommended benchmark: {benchmark}")
                 
                 with st.spinner("Fetching and analyzing data..."):
                     # Initialize analyzer with resolved ticker
