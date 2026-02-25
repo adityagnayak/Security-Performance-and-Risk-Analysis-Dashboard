@@ -694,11 +694,16 @@ class SecurityAnalyzer:
         # Get currency from info
         currency = self.info.get('currency', 'USD')
         
+        # Handle GBp (pence) - special case for UK stocks
+        if currency == 'GBp':
+            return 'p'  # Pence symbol
+        
         # Currency symbol mapping
         currency_symbols = {
             'USD': '$',
             'EUR': '€',
             'GBP': '£',
+            'GBp': 'p',  # Pence
             'JPY': '¥',
             'CNY': '¥',
             'INR': '₹',
@@ -734,7 +739,13 @@ class SecurityAnalyzer:
         if not self.info:
             return 'USD'
         
-        return self.info.get('currency', 'USD')
+        currency = self.info.get('currency', 'USD')
+        
+        # Handle pence specially
+        if currency == 'GBp':
+            return 'GBp (Pence)'
+        
+        return currency
 
 
 def format_number(num, is_percentage=False, is_currency=False, currency_symbol='$'):
@@ -949,9 +960,22 @@ def main():
         st.caption("💡 Tip: Use ticker symbols. For Indian stocks add .NS (NSE) or .BO (BSE)")
         
         # Benchmark
+        # Check if there's a suggested benchmark in session state
+        if 'suggested_benchmark' in st.session_state and st.session_state.suggested_benchmark:
+            default_benchmark = st.session_state.suggested_benchmark
+            # Find index in list
+            benchmark_list = ["SPY", "QQQ", "DIA", "IWM", "^GSPC", "^DJI", "^IXIC", "^NSEI", "^BSESN", "^FTSE", "^N225", "^HSI", "^AXJO", "^GSPTSE", "^FCHI", "^GDAXI", "^SSMI"]
+            try:
+                default_index = benchmark_list.index(default_benchmark)
+            except ValueError:
+                default_index = 0
+        else:
+            default_index = 0
+            
         benchmark = st.selectbox(
             "Benchmark Index",
             ["SPY", "QQQ", "DIA", "IWM", "^GSPC", "^DJI", "^IXIC", "^NSEI", "^BSESN", "^FTSE", "^N225", "^HSI", "^AXJO", "^GSPTSE", "^FCHI", "^GDAXI", "^SSMI"],
+            index=default_index,
             help="Select benchmark for comparative analysis\nUS: SPY/QQQ/DIA | India: ^NSEI/^BSESN | UK: ^FTSE | Japan: ^N225 | HK: ^HSI | AU: ^AXJO | CA: ^GSPTSE | FR: ^FCHI | DE: ^GDAXI | CH: ^SSMI",
             key="benchmark"
         )
@@ -1028,7 +1052,7 @@ def main():
             risk_free_rate = 0.04
             var_confidence = 0.95
         
-        analyze_button = st.button("🔍 Analyze Security", type="primary", use_container_width=True)
+        analyze_button = st.button("🔍 Analyze Security", type="primary", width="stretch")
     
     # Main content
     if analyze_button and security_input:
@@ -1067,8 +1091,9 @@ def main():
                     
                     # Offer to auto-switch
                     if st.button(f"✨ Auto-Switch to {suggested_benchmark}", key="auto_switch_benchmark"):
-                        benchmark = suggested_benchmark
-                        st.success(f"✅ Benchmark changed to {suggested_benchmark}")
+                        # Store suggested benchmark in session state
+                        st.session_state.suggested_benchmark = suggested_benchmark
+                        # Rerun to update the selectbox
                         st.rerun()
                 
                 with st.spinner("Fetching and analyzing data..."):
@@ -1167,7 +1192,7 @@ def main():
             )
         
         # Price chart
-        st.plotly_chart(create_price_chart(analyzer), use_container_width=True)
+        st.plotly_chart(create_price_chart(analyzer), width="stretch")
         
         st.markdown("---")
         
@@ -1286,19 +1311,19 @@ def main():
         
         # Charts - show cumulative returns for all, other charts only in advanced
         if st.session_state.analysis_mode == "Basic":
-            st.plotly_chart(create_returns_chart(analyzer), use_container_width=True)
+            st.plotly_chart(create_returns_chart(analyzer), width="stretch")
         else:
             # Advanced mode: show all charts
             col1, col2 = st.columns(2)
             
             with col1:
-                st.plotly_chart(create_returns_chart(analyzer), use_container_width=True)
+                st.plotly_chart(create_returns_chart(analyzer), width="stretch")
             
             with col2:
-                st.plotly_chart(create_drawdown_chart(analyzer), use_container_width=True)
+                st.plotly_chart(create_drawdown_chart(analyzer), width="stretch")
             
             # Distribution chart
-            st.plotly_chart(create_returns_distribution(analyzer), use_container_width=True)
+            st.plotly_chart(create_returns_distribution(analyzer), width="stretch")
         
         st.markdown("---")
         
@@ -1401,7 +1426,7 @@ def main():
             }
             
             summary_df = pd.DataFrame(summary_data)
-            st.dataframe(summary_df, use_container_width=True, hide_index=True)
+            st.dataframe(summary_df, width="stretch", hide_index=True)
     
     elif analyze_button and not security_input:
         st.warning("⚠️ Please enter a security symbol or name.")
