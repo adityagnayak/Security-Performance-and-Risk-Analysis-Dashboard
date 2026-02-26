@@ -687,26 +687,52 @@ class SecurityAnalyzer:
 
     def calculate_var(self, confidence: float = 0.95) -> dict:
         """
-        Calculate Value at Risk metrics.
-        Returns Historical VaR, Parametric VaR, and CVaR.
+        Calculate Value at Risk metrics using Log Returns (Log-Normal approach).
+        
+        1. Converts simple returns to log returns: r_log = ln(1 + r_simple)
+        2. Calculates risk metrics on the log distribution (which is closer to Normal).
+        3. Converts results back to simple percentage terms: r_simple = exp(r_log) - 1
         """
         if self.returns is None or len(self.returns) == 0:
             return {'hist': np.nan, 'param': np.nan, 'cvar': np.nan}
 
-        r = self.returns.dropna().values
+        # 1. Convert simple returns to log returns
+        # Log returns are additive and unbounded, fitting normal distribution better
+        r_simple = self.returns.dropna().values
+        r_log = np.log1p(r_simple)  # log(1 + x)
+        
         alpha = 1 - confidence
 
-        # Historical VaR
-        hist_var = float(np.percentile(r, alpha * 100))
+        # ── Historical VaR (Log Based) ──
+        # We take the percentile of log returns, then convert back
+        log_hist_var = np.percentile(r_log, alpha * 100)
+        hist_var = np.expm1(log_hist_var)  # exp(x) - 1
 
-        # Parametric VaR (assumes normal distribution)
+        # ── Parametric VaR (Log-Normal) ──
+        # Calculate mu and sigma of log returns
+        mu_log = r_log.mean()
+        sigma_log = r_log.std()
         z = stats.norm.ppf(alpha)
-        param_var = float(r.mean() + z * r.std())
+        
+        # Calculate VaR in log terms: mu + z*sigma
+        log_param_var = mu_log + z * sigma_log
+        # Convert back to simple percentage price drop
+        param_var = np.expm1(log_param_var)
 
-        # CVaR (Expected Shortfall)
-        cvar = float(r[r <= hist_var].mean()) if len(r[r <= hist_var]) > 0 else hist_var
+        # ── CVaR (Expected Shortfall) ──
+        # Average of log returns below the log VaR threshold, then converted back
+        tail_losses = r_log[r_log <= log_hist_var]
+        if len(tail_losses) > 0:
+            log_cvar = tail_losses.mean()
+            cvar = np.expm1(log_cvar)
+        else:
+            cvar = hist_var
 
-        return {'hist': hist_var, 'param': param_var, 'cvar': cvar}
+        return {
+            'hist': float(hist_var), 
+            'param': float(param_var), 
+            'cvar': float(cvar)
+        }
 
     def get_moving_averages(self) -> dict:
         """Calculate 50, 100, 200-day moving averages."""
